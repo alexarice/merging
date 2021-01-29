@@ -1,0 +1,124 @@
+
+\documentclass[draft]{article}
+
+\title{Merging Operation} \author{Alex Rice}
+
+\usepackage{verbatim} \usepackage{geometry} \usepackage{amsmath}
+\usepackage{amssymb} \usepackage{amsfonts} \usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{tikz} \usepackage{listings} \usepackage{graphicx}
+\usepackage{color} \usepackage{stmaryrd} \usepackage{cellspace}
+\usepackage[colorinlistoftodos,obeyDraft]{todonotes}
+\usepackage{ebproof}
+\renewcommand{\comment}[1]{\todo[color=green!40]{#1}}
+
+
+\usetikzlibrary{positioning,cd}
+
+\usepackage[ backend=biber, style=numeric, citestyle=numeric,
+maxbibnames=99, isbn=false, doi=false, eprint=false, block=ragged,
+uniquename=init ]{biblatex}
+
+% \addbibresource{./citations/citations.bib}
+
+% \DefineBibliographyStrings{english}{%
+% bibliography = {References}, }
+
+\usepackage{hyperref} \usepackage[nameinlink,capitalise]{cleveref}
+\hypersetup{final}
+
+\newtheorem{theorem}{Theorem} \newtheorem{prop}[theorem]{Proposition}
+\newtheorem{cor}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma} \theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition} \theoremstyle{remark}
+\newtheorem{remark}{Remark} \newtheorem*{claim}{Claim}
+
+\DeclareMathOperator{\id}{id}
+\DeclareMathOperator{\C}{C}
+\newcommand*{\Coh}[3]{\ensuremath\mathsf{Coh}\;(#1:#2)[#3]}
+\newcommand*{\Comp}[3]{\ensuremath\mathsf{Comp}\;(#1:#2)[#3]}
+\newcommand*{\Ctx}{\ensuremath{\mathsf{Ctx}}}
+\newcommand*{\Sub}{\ensuremath{\mathsf{Sub}}}
+\newcommand*{\Type}{\ensuremath{\mathsf{Type}}}
+\newcommand*{\Term}{\ensuremath{\mathsf{Term}}}
+\newcommand*{\arr}[3]{\ensuremath{#1 \to_{#2} #3}}
+\newcommand*{\FV}{\ensuremath{\mathsf{FV}}}
+\newcommand*{\sub}[2]{\ensuremath{#1\llbracket #2 \rrbracket}}
+\newcommand*{\drop}{\ensuremath{\mathsf{drop}}}
+\newcommand*{\supp}{\ensuremath{\mathsf{supp}}}
+\newcommand*{\fix}{\ensuremath{\mathsf{fix}}}
+\newcommand*{\redg}{\ensuremath{\twoheadrightarrow_g}}
+\newcommand*{\redb}{\ensuremath{\twoheadrightarrow_b}}
+\newcommand*{\Int}{\ensuremath{\mathsf{Int}}}
+
+\setlength\cellspacetoplimit{5pt} \setlength\cellspacebottomlimit{5pt}
+
+\begin{document}
+\maketitle
+
+\begin{definition}
+  Suppose we have contexts \(\Gamma\) and \(\Delta\) and substitution \(\sigma : \Delta \to \Gamma\). Further suppose that \(f : C \in \Delta\) and \(\sigma(f) = \Comp \Theta B \tau\). Say that \(f\) is \emph{mergable} in \(\sigma\) if there exists a variable to variable substitution
+  \[ \mu : \supp(\delta^{+-}(f)) \to \partial^{+-}(\Theta)\]
+  which is surjective and such that \(\sub{\mu(x)}\tau = \sub x \sigma\) for all \(x \in \supp(\delta^{+-}(f))\) and \(\sub C \mu = B\).
+\end{definition}
+
+\section{Merging operation}
+\label{sec:merging}
+
+Given the setup above, we perform merging of a mergable cell \(f\) by constructing context \(M\) and substitutions \(L\) and \(R\) such that:
+
+% https://q.uiver.app/?q=WzAsMyxbMCwwLCJcXERlbHRhIl0sWzEsMSwiTSJdLFsyLDAsIlxcR2FtbWEiXSxbMCwxLCJMIiwyXSxbMSwyLCJSIiwyXSxbMCwyLCJcXHNpZ21hIl1d
+\begin{equation}
+\begin{tikzcd}
+  \Delta && \Gamma \\
+  & M
+  \arrow["L"', from=1-1, to=2-2]
+  \arrow["R"', from=2-2, to=1-3]
+  \arrow["\sigma", from=1-1, to=1-3]
+\end{tikzcd}\label{eq:triangle}
+\end{equation}
+
+commutes. This is done by induction on \(\Delta\).
+\begin{enumerate}
+\item Suppose \(\Delta\) is empty. Then set \(M\), \(L\), and \(R\) to be empty.
+\item Suppose \(\Delta = \Delta' , x : D\) where \(x \not\in \supp(\delta^{+-}(f))\). By induction we have \((M',L',R')\). Now let:
+  \begin{itemize}
+  \item \(M = M' , x : \sub D {L'}\)
+  \item \(L = \langle L' , x \mapsto x \rangle\)
+  \item \(R = \langle R' , x \mapsto \sub x \sigma \rangle\)
+  \end{itemize}
+\item Suppose \(\Delta = \Delta' , x : D\) where \(x \in \supp(\delta^{+-}(f))\). By induction we have \((M',L',R')\). Now let:
+  \begin{itemize}
+  \item \(M = M' , \sub x \mu : \sub D {L'}\) or \(M'\) if \(\sub x \mu \in M'\)
+  \item \(L' = \langle L' , x \mapsto \sub x \mu \rangle\)
+  \item \(R' = \langle R' , \sub x \mu \mapsto \sub {(\sub x \mu)} \tau \rangle\) or \(R'\) if \(\sub x \mu \in M'\).
+  \end{itemize}
+\item Suppose \(\Delta = \Delta' , f : C\). By induction we have \((M',L',R')\). Now let:
+  \begin{itemize}
+  \item \(M = M' + \Int(\Theta)\)
+  \item \(L = \langle L', f \mapsto \Comp \Theta B \iota \rangle\)
+  \item \(R = R' + \Int(\tau)\)
+  \end{itemize}
+  Where \(\iota\) is the inclusion from \(\Theta\) to \(M\).
+\end{enumerate}
+
+\begin{lemma}
+  \(M\) is a well typed context. \(L\) is a well typed substitution. \(R\) is a well typed substitution. The triangle (\ref{eq:triangle}) commutes.
+\end{lemma}
+\begin{proof}
+  By induction:
+  \begin{enumerate}
+  \item \(M\) is empty so well typed. \(L\) and \(R\) are also empty so are well typed substitutions from empty contexts. The triangle trivially commutes.
+  \item \(M'\),\(L'\), and \(R'\) are well typed by inductive hypothesis. \(D\) is well typed in \(\Delta\) and \(L'\) is a well typed substitution so \(\sub D {L'}\) is typed in \(M'\). \(L\) is typed as \(L'\) is typed and \(x\) has type \(\sub D {L'}\) in \(M\) as required. To show \(R'\) is well typed we need \(\sub x \sigma\) to have type \(\sub {(\sub D {L'})} R'\), however this follows from (\ref{eq:triangle}) commuting for \((M', L', R')\). To show the triangle commutes for \((M,L,R)\) we need that \(\sub x {\sigma} = \sub x {R \circ L}\) but this follows from \(\sub x {R \circ L} = \sub {\sub x L} R = \sub x R = \sub x \sigma\).
+  \item By inductive hypothesis we have \(M'\),\(L'\), \(R'\) are well typed and the triangle commutes. Similar to above \(M\) is well typed. \(R\) can also easily be seen to be well typed in either case. If \(\sub x \mu \not\in M'\) then \(L'\) is well typed with similar logic to above. If not then there is \(y \in \Delta\) with \(\sub y \mu = \sub x \mu\). Suppose \(y : E\). Then \(E\) and \(D\) must be contained in \(\supp(\delta^{+-}(f))\) and so \(\sub E {L'} = \sub E \mu = \sub D \mu = \sub D {L'}\). Hence \(L\) is well typed. Checking that the triangle commutes is the same as above in the case that \(\sub x \mu \not \in M'\) except that we need to use that \(\tau \circ \mu = \sigma\) (when restricted correctly). If it is then we have that \(\sub x {R' \circ L'} = \sub y \sigma\) and so we need to show that \(\sub x \sigma = \sub y \sigma\). However this follows from \(\sub x \sigma = \sub {(\sub x \mu)} \tau = \sub {(\sub y \mu)} \tau = \sub y \sigma\).
+  \item By inductive hypothesis \(\dots\). Note that \(\supp(\delta^{+-}(f)) \subseteq \Delta'\) and so the image of \(\mu\) is contained in \(M'\). By surjectivity of \(\mu\), this equals \(\partial^{+-}(\Theta)\) and so \(M\) is well typed. As \(M\) contains a copy of \(\Theta\), \(\Comp \Theta B \iota\) is well typed. For \(L\) to be well typed we need that \(\sub C {L'} = B\). \(\sub C {L'} = \sub C \mu = B\). \(R\) is well typed as \(R'\) acts by \(\tau\) on \(\partial^{+-}(\Theta)\). To get the triangle commuting we need \(\sub f \sigma = \sub f {R \circ L}\).
+    \begin{align*}
+      \sub f {R \circ L} &= \sub {(\sub f L)} R\\
+                         &= \sub {\Comp \Theta B \iota} R\\
+                         &= \Comp \Theta B {R \circ \iota}\\
+                         &= \Comp \Theta B \tau\\
+                         &= \sub f \sigma
+    \end{align*}
+  \end{enumerate}
+\end{proof}
+\end{document}
